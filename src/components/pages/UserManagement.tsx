@@ -1,8 +1,5 @@
 import {
   Center,
-  Modal,
-  ModalContent,
-  ModalOverlay,
   Spinner,
   useDisclosure,
   Wrap,
@@ -10,16 +7,25 @@ import {
 } from "@chakra-ui/react";
 import { memo, FC, useEffect, useCallback } from "react";
 import { useAllUsers } from "../../hooks/useAllUsers";
+import { useSelectUser } from "../../hooks/useSelectUser";
 import { UserCard } from "../organizm/user/UserCard";
+import { UserDetailModal } from "../organizm/user/UserDetailModal";
+import { useLoginUser } from "../../hooks/useLoginUser";
 
 export const UserManagement: FC = memo(() => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { getUsers, users, loading } = useAllUsers();
+  const { onSelectUser, selectedUser } = useSelectUser();
+  const { loginUser } = useLoginUser();
 
   useEffect(() => getUsers(), []);
 
-  const onClickUser = useCallback(() => onOpen(), []);
-
+  const onClickUser = useCallback(
+    (id: number) => {
+      onSelectUser({ id, users, onOpen });
+    },
+    [users, onSelectUser, onOpen]
+  );
   return (
     <>
       {loading ? (
@@ -31,6 +37,7 @@ export const UserManagement: FC = memo(() => {
           {users.map((user) => (
             <WrapItem key={user.id} mx="auto">
               <UserCard
+                id={user.id}
                 imageUrl="https://source.unsplash.com/random"
                 userName={user.username}
                 fullName={user.name}
@@ -40,12 +47,12 @@ export const UserManagement: FC = memo(() => {
           ))}
         </Wrap>
       )}
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <p>テスト</p>
-        </ModalContent>
-      </Modal>
+      <UserDetailModal
+        isOpen={isOpen}
+        onClose={onClose}
+        user={selectedUser}
+        isAdmin={loginUser?.isAdmin}
+      />
     </>
   );
 });
